@@ -1,3 +1,8 @@
 <Solution>
+  <Folder Name="/Элементы решения/">
+    <File Path="docker-compose.yml" />
+    <File Path="nginx.conf" />
+    <File Path="prometheus.yml" />
+  </Folder>
   <Project Path="ProductionSystem/ProductionSystem.csproj" />
 </Solution>
