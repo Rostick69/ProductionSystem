@@ -1,4 +1,8 @@
 <Solution>
+  <Folder Name="/.github/" />
+  <Folder Name="/.github/workflows/">
+    <File Path="ci.yml" />
+  </Folder>
   <Folder Name="/Элементы решения/">
     <File Path="docker-compose.yml" />
     <File Path="nginx.conf" />

@@ -1,0 +1,33 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Скачиваем код из репозитория
+      - uses: actions/checkout@v3
+
+      # Устанавливаем .NET 8
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: '8.0.x'
+
+      # Восстанавливаем зависимости
+      - name: Restore
+        run: dotnet restore
+
+      # Собираем проект
+      - name: Build
+        run: dotnet build --no-restore
+
+      # Запускаем тесты
+      - name: Test
+        run: dotnet test --no-build
