@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using ProductionSystem.Data;
+using Prometheus;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -29,6 +30,10 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+// Включаем сбор метрик для Prometheus
+app.UseHttpMetrics();
+app.MapMetrics();
 
 app.UseAuthorization();
 
