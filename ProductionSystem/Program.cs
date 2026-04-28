@@ -1,4 +1,11 @@
+using Microsoft.EntityFrameworkCore;
+using ProductionSystem.Data;
+
 var builder = WebApplication.CreateBuilder(args);
+
+// Подключаем базу данных PostgreSQL
+builder.Services.AddDbContext<AppDbContext>(options =>
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 // Add services to the container.
 
