@@ -8,5 +8,6 @@
     <File Path="nginx.conf" />
     <File Path="prometheus.yml" />
   </Folder>
+  <Project Path="ProductionClient/ProductionClient.csproj" Id="990f4ae5-4fc7-447e-b729-f729c0d2e1ba" />
   <Project Path="ProductionSystem/ProductionSystem.csproj" />
 </Solution>
