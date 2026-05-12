@@ -50,25 +50,45 @@ docker-compose up --build
 Статусы заказа: `Новый` → `В работе` → `Готов`
 
 ## Структура проекта
+
 ├── ProductionSystem/           # Серверное приложение
+
 │   ├── Models/                 # Модели данных
+
 │   │   ├── Product.cs          # Модель изделия
+
 │   │   ├── Material.cs         # Модель материала
+
 │   │   └── Order.cs            # Модель заказа
+
 │   ├── Data/
+
 │   │   └── AppDbContext.cs     # Контекст базы данных EF Core
+
 │   ├── Controllers/            # Контроллеры REST API
+
 │   │   ├── ProductsController.cs
+
 │   │   ├── MaterialsController.cs
+
 │   │   └── OrdersController.cs
+
 │   ├── Migrations/             # Миграции базы данных
+
 │   ├── Program.cs              # Точка входа и конфигурация
+
 │   └── Dockerfile              # Инструкция сборки образа
+
 ├── ProductionClient/           # Консольный клиент
+
 │   └── Program.cs              # Клиент с делегатами
+
 ├── docker-compose.yml          # Конфигурация всех контейнеров
+
 ├── nginx.conf                  # Конфигурация обратного прокси
+
 ├── prometheus.yml              # Конфигурация сбора метрик
+
 └── .github/workflows/ci.yml    # CI/CD пайплайн
 
 ## Технологии
