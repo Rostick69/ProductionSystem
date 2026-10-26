@@ -1,113 +1,81 @@
 # Система управления производственным предприятием
 
 Лабораторная работа №3 по дисциплине «Системное программное обеспечение»  
-Вариант 17 — Production-ready система управления производственным предприятием 🚀
+Вариант 17 — система управления производственным предприятием: изделия, материалы, заказы, смены 🚀
 
 ## Что умеет система
 
-Это полноценный серверный стек для управления производственным предприятием с REST API, базой данных, кэшированием и мониторингом:
-
-- **REST API** — полный набор CRUD операций для изделий, материалов и заказов
-- **PostgreSQL** — хранение данных с автоматическими миграциями через Entity Framework Core
-- **Redis** — кэширование GET-запросов с временем жизни 60 секунд для ускорения работы
-- **Nginx** — обратный прокси, принимает запросы на порту 80 и перенаправляет к API
-- **Prometheus + Grafana** — мониторинг метрик в реальном времени с дашбордом из 3 панелей
-- **Swagger UI** — интерактивная документация и тестирование API прямо в браузере
-- **CI/CD** — автоматическая сборка и тестирование через GitHub Actions при каждом коммите
-- **C# клиент** — консольное приложение с демонстрацией делегатов, Action, Func
+- **REST API (ASP.NET Core 8)** — CRUD для изделий, материалов, смен и заказов, документация в Swagger UI
+- **PostgreSQL** — данные хранятся в базе, миграции EF Core и тестовые данные применяются автоматически при запуске
+- **Redis** — кэширование GET-запросов (TTL 60 секунд), кэш сбрасывается при изменении данных
+- **Nginx** — обратный прокси, единая точка входа на порту 80
+- **Prometheus + Grafana** — метрики API и готовый дашборд из 6 панелей (подключается автоматически)
+- **GitHub Actions** — сборка, тесты xUnit и сборка Docker-образа при каждом push
+- **Консольный C#-клиент** — работа с API через делегаты и события
 
 ## Как запустить
 
-### Требования
-- Docker Desktop
-- Git
+Нужен Docker Desktop.
 
-### Запуск
 ```bash
 git clone https://github.com/Rostick69/ProductionSystem.git
 cd ProductionSystem
-docker-compose up --build
+docker compose up -d --build
 ```
 
-После запуска все сервисы поднимутся автоматически.
+| Сервис | Адрес | Примечание |
+|--------|-------|------------|
+| Swagger UI | http://localhost/swagger | через Nginx |
+| API | http://localhost/api/products | через Nginx |
+| Grafana | http://localhost:3000 | логин `admin`, пароль `admin`, дашборд «ProductionSystem — мониторинг API» |
+| Prometheus | http://localhost:9090 | Status → Targets: цель `productionsystem` в состоянии UP |
+| PostgreSQL | localhost:5432 | база `productiondb`, пользователь/пароль `postgres` |
 
-## Адреса сервисов
+Клиент запускается после старта системы:
 
-| Сервис | Адрес | Описание |
-|--------|-------|----------|
-| Swagger UI | http://localhost/swagger | Тестирование API |
-| Grafana | http://localhost:3000 | Дашборд мониторинга |
-| Prometheus | http://localhost:9090 | Метрики приложения |
-| PostgreSQL | localhost:5432 | База данных |
-| Redis | localhost:6379 | Кэш |
+```bash
+dotnet run --project ProductionClient
+```
 
-## Сущности системы
+Остановить систему: `docker compose down` (с удалением данных: `docker compose down -v`).
 
-**Product (Изделие)** — продукция предприятия: название, описание, цена  
-**Material (Материал)** — сырьё на складе: название, единица измерения, количество  
-**Order (Заказ)** — заказ на производство: изделие, количество, статус, дата создания
+## Сущности
 
-Статусы заказа: `Новый` → `В работе` → `Готов`
+| Сущность | Поля | Связи |
+|----------|------|-------|
+| Product (изделие) | Id, Name, Description, Price | — |
+| Material (материал) | Id, Name, Unit, Quantity | — |
+| Shift (смена) | Id, Name, StartTime, EndTime, Supervisor | — |
+| Order (заказ) | Id, ProductId, ShiftId, Quantity, Status, CreatedAt | Order → Product (обязательно, каскадное удаление), Order → Shift (необязательно, при удалении смены ShiftId = NULL) |
 
-## Структура проекта
+## Эндпоинты
 
-├── ProductionSystem/           # Серверное приложение
+Для каждой сущности (`products`, `materials`, `shifts`, `orders`):
 
-│   ├── Models/                 # Модели данных
+| Метод | Адрес | Коды ответа |
+|-------|-------|-------------|
+| GET | /api/{entity} | 200 |
+| GET | /api/{entity}/{id} | 200, 404 |
+| POST | /api/{entity} | 201, 400 |
+| PUT | /api/{entity}/{id} | 204, 400, 404 |
+| DELETE | /api/{entity}/{id} | 204, 404 |
 
-│   │   ├── Product.cs          # Модель изделия
+Кэш Redis: списки всех сущностей и записи по id для изделий, материалов и смен.
 
-│   │   ├── Material.cs         # Модель материала
+## Структура
 
-│   │   └── Order.cs            # Модель заказа
-
-│   ├── Data/
-
-│   │   └── AppDbContext.cs     # Контекст базы данных EF Core
-
-│   ├── Controllers/            # Контроллеры REST API
-
-│   │   ├── ProductsController.cs
-
-│   │   ├── MaterialsController.cs
-
-│   │   └── OrdersController.cs
-
-│   ├── Migrations/             # Миграции базы данных
-
-│   ├── Program.cs              # Точка входа и конфигурация
-
-│   └── Dockerfile              # Инструкция сборки образа
-
-├── ProductionClient/           # Консольный клиент
-
-│   └── Program.cs              # Клиент с делегатами
-
-├── docker-compose.yml          # Конфигурация всех контейнеров
-
-├── nginx.conf                  # Конфигурация обратного прокси
-
-├── prometheus.yml              # Конфигурация сбора метрик
-
-└── .github/workflows/ci.yml    # CI/CD пайплайн
-
-## Технологии
-
-| Технология | Версия | Назначение |
-|------------|--------|------------|
-| ASP.NET Core Web API | .NET 8 | Серверное приложение |
-| Entity Framework Core | 8.0.4 | ORM для работы с БД |
-| PostgreSQL | 16 | Реляционная база данных |
-| Redis | 7 | Кэширование |
-| Docker + Docker Compose | latest | Контейнеризация |
-| Nginx | latest | Обратный прокси |
-| Prometheus | latest | Сбор метрик |
-| Grafana | latest | Визуализация метрик |
-| GitHub Actions | — | CI/CD пайплайн |
-
-## Автор
-
-Ростовцев Д. А.  
-Группа Б.ИВТ.ПРОМ.23.01  
-Тверской государственный технический университет  
-Тверь, 2026 г.
+```
+ProductionSystem/            ASP.NET Core Web API
+  Controllers/               контроллеры CRUD
+  Data/                      AppDbContext, применение миграций и тестовые данные (DbSeeder)
+  Models/                    Product, Material, Shift, Order
+  Services/CacheService.cs   работа с Redis + метрика попаданий в кэш
+  Migrations/                миграции EF Core
+  Dockerfile                 многоступенчатая сборка образа
+ProductionSystem.Tests/      тесты xUnit (база и кэш в памяти)
+ProductionClient/            консольный клиент: ApiService, собственные делегаты, Action/Func
+grafana/                     источник данных и дашборд Grafana (provisioning)
+docker-compose.yml           все 6 сервисов
+nginx.conf, prometheus.yml   конфигурация прокси и сбора метрик
+.github/workflows/ci.yml     пайплайн GitHub Actions
+```
