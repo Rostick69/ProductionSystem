@@ -39,6 +39,16 @@ dotnet run --project ProductionClient
 
 Остановить систему: `docker compose down` (с удалением данных: `docker compose down -v`).
 
+## Скриншоты
+
+| Swagger UI | Дашборд Grafana |
+|------|------|
+| ![Swagger](docs/screenshots/ps_swagger.png) | ![Grafana](docs/screenshots/ps_grafana.png) |
+
+| Консольный клиент | GitHub Actions |
+|------|------|
+| ![Клиент](docs/screenshots/ps_client.png) | ![CI](docs/screenshots/ps_actions.png) |
+
 ## Сущности
 
 | Сущность | Поля | Связи |
@@ -79,3 +89,7 @@ docker-compose.yml           все 6 сервисов
 nginx.conf, prometheus.yml   конфигурация прокси и сбора метрик
 .github/workflows/ci.yml     пайплайн GitHub Actions
 ```
+## Отчёт
+
+[docs/Отчёт_лаба3.docx](docs/Отчёт_лаба3.docx)
+
