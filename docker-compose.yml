@@ -1,61 +1,108 @@
-version: '3.8'
+# Система управления производственным предприятием (вариант 17)
+# Запуск всей системы одной командой:  docker compose up -d --build
+#   API через Nginx:  http://localhost/swagger
+#   Prometheus:       http://localhost:9090
+#   Grafana:          http://localhost:3000  (admin / admin)
 
 services:
 
-  # Наше ASP.NET Core приложение
+  # ASP.NET Core Web API. Наружу порт не публикуется — доступ только через Nginx
   api:
     build: ./ProductionSystem
-    ports:
-      - "8080:8080"
+    container_name: production-api
     environment:
-      - ConnectionStrings__DefaultConnection=Host=db;Port=5432;Database=4ekane;Username=postgres;Password=12122
+      - ASPNETCORE_ENVIRONMENT=Production
+      - CONNECTION_STRING=Host=db;Port=5432;Database=productiondb;Username=postgres;Password=postgres
+      - REDIS_CONNECTION=redis:6379
+    expose:
+      - "8080"
     depends_on:
-      - db
-      - redis
+      db:
+        condition: service_healthy   # ждём, пока PostgreSQL будет готов принимать подключения
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    networks: [backend]
 
   # База данных PostgreSQL
   db:
     image: postgres:16
+    container_name: production-db
+    restart: unless-stopped        # поднимается сам после перезагрузки Docker
     environment:
       POSTGRES_DB: productiondb
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
     ports:
-      - "5432:5432"
+      - "5432:5432"                  # для подключения DBeaver/pgAdmin
     volumes:
       - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d productiondb"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks: [backend]
 
   # Redis — кэш
   redis:
     image: redis:7
-    ports:
-      - "6379:6379"
+    container_name: production-redis
+    restart: unless-stopped        # поднимается сам после перезагрузки Docker
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    networks: [backend]
 
-  # Nginx — обратный прокси (перенаправляет запросы к API)
+  # Nginx — обратный прокси, единая точка входа на порту 80
   nginx:
-    image: nginx:latest
+    image: nginx:1.27
+    container_name: production-nginx
     ports:
       - "80:80"
     volumes:
-      - ./nginx.conf:/etc/nginx/nginx.conf
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
     depends_on:
       - api
+    restart: unless-stopped
+    networks: [backend]
 
-  # Prometheus — собирает метрики
+  # Prometheus — опрашивает /metrics приложения каждые 15 секунд
   prometheus:
-    image: prom/prometheus
+    image: prom/prometheus:v2.53.0
+    container_name: production-prometheus
+    restart: unless-stopped        # поднимается сам после перезагрузки Docker
     ports:
       - "9090:9090"
     volumes:
-      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    depends_on:
+      - api
+    networks: [backend]
 
-  # Grafana — красивые графики с метриками
+  # Grafana — дашборд и источник данных подключаются автоматически (provisioning)
   grafana:
-    image: grafana/grafana
+    image: grafana/grafana:11.1.0
+    container_name: production-grafana
+    restart: unless-stopped        # поднимается сам после перезагрузки Docker
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
     ports:
       - "3000:3000"
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
     depends_on:
       - prometheus
+    networks: [backend]
 
 volumes:
   pgdata:
+  grafana-data:
+
+networks:
+  backend:

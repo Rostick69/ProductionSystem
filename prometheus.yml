@@ -1,9 +1,8 @@
 global:
-  # Как часто собирать метрики (каждые 15 секунд)
-  scrape_interval: 15s
+  scrape_interval: 15s        # опрос метрик каждые 15 секунд
 
 scrape_configs:
   - job_name: 'productionsystem'
+    metrics_path: /metrics
     static_configs:
-      # Адрес нашего API откуда брать метрики
-      - targets: ['api:8080']
+      - targets: ['api:8080']  # API внутри Docker-сети
