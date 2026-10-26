@@ -1,6 +1,15 @@
-@ProductionSystem_HostAddress = http://localhost:5081
+# Запросы через Nginx (docker-compose up)
+@host = http://localhost
 
-GET {{ProductionSystem_HostAddress}}/weatherforecast/
+GET {{host}}/api/products
 Accept: application/json
 
 ###
+GET {{host}}/api/orders
+Accept: application/json
+
+###
+POST {{host}}/api/products
+Content-Type: application/json
+
+{ "name": "Шайба М8", "description": "Шайба плоская", "price": 1.5 }
