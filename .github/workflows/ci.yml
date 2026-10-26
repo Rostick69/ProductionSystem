@@ -1,33 +1,40 @@
 name: CI
 
+# Пайплайн запускается при каждом push и pull request
 on:
-     push:
-       branches: [ master ]
-     pull_request:
-       branches: [ master ]
+  push:
+  pull_request:
 
 jobs:
-  build:
+  build-and-test:
     runs-on: ubuntu-latest
 
     steps:
-      # Скачиваем код из репозитория
-      - uses: actions/checkout@v3
+      # 1. Получение кода репозитория
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      # Устанавливаем .NET 8
+      # 2. Установка .NET SDK.
+      #    Проекты на .NET 8, а файл решения .slnx понимает только SDK 9.0.200 и новее, поэтому ставим оба
       - name: Setup .NET
-        uses: actions/setup-dotnet@v3
+        uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '8.0.x'
+          dotnet-version: |
+            8.0.x
+            9.0.x
 
-      # Восстанавливаем зависимости
+      # 3. Восстановление зависимостей (NuGet)
       - name: Restore
-        run: dotnet restore
+        run: dotnet restore ProductionSystem.slnx
 
-      # Собираем проект
+      # 4. Сборка
       - name: Build
-        run: dotnet build --no-restore
+        run: dotnet build ProductionSystem.slnx --no-restore --configuration Release
 
-      # Запускаем тесты
+      # 5. Автоматические тесты (xUnit)
       - name: Test
-        run: dotnet test --no-build
+        run: dotnet test ProductionSystem.slnx --no-build --configuration Release --verbosity normal
+
+      # Дополнительно: проверяем, что Docker-образ API собирается
+      - name: Docker build
+        run: docker build -t productionsystem-api ./ProductionSystem
