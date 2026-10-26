@@ -1,19 +1,32 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using ProductionSystem.Models;
 
 namespace ProductionSystem.Data;
 
-// Контекст базы данных — связывает наши модели с реальными таблицами в PostgreSQL
+// Контекст базы данных — связывает модели с таблицами PostgreSQL
 public class AppDbContext : DbContext
 {
     public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
 
-    // Таблица изделий
     public DbSet<Product> Products { get; set; }
-
-    // Таблица материалов
     public DbSet<Material> Materials { get; set; }
-
-    // Таблица заказов
     public DbSet<Order> Orders { get; set; }
+    public DbSet<Shift> Shifts { get; set; }
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        // Заказ -> изделие: при удалении изделия удаляются и его заказы
+        modelBuilder.Entity<Order>()
+            .HasOne(o => o.Product)
+            .WithMany()
+            .HasForeignKey(o => o.ProductId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // Заказ -> смена: при удалении смены у заказа просто сбрасывается ShiftId
+        modelBuilder.Entity<Order>()
+            .HasOne(o => o.Shift)
+            .WithMany()
+            .HasForeignKey(o => o.ShiftId)
+            .OnDelete(DeleteBehavior.SetNull);
+    }
 }

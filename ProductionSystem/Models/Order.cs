@@ -1,23 +1,29 @@
-﻿namespace ProductionSystem.Models;
+using System.ComponentModel.DataAnnotations;
 
-// Модель заказа — описывает что и в каком количестве заказал клиент
+namespace ProductionSystem.Models;
+
+// Заказ на изготовление изделия. Связан с изделием (обязательно) и сменой (необязательно)
 public class Order
 {
-    // Уникальный номер заказа (база данных заполняет сама)
     public int Id { get; set; }
 
-    // Ссылка на изделие — какое именно изделие заказали
+    // Внешний ключ на изделие
+    [Range(1, int.MaxValue, ErrorMessage = "Укажите изделие")]
     public int ProductId { get; set; }
-
-    // Само изделие (Entity Framework заполняет автоматически)
     public Product? Product { get; set; }
 
+    // Внешний ключ на смену (может быть не назначена)
+    public int? ShiftId { get; set; }
+    public Shift? Shift { get; set; }
+
     // Количество изделий в заказе
+    [Range(1, 1_000_000, ErrorMessage = "Количество должно быть от 1 до 1 000 000")]
     public int Quantity { get; set; }
 
     // Статус заказа: "Новый", "В работе", "Готов"
+    [Required]
     public string Status { get; set; } = "Новый";
 
-    // Дата создания заказа (заполняется автоматически)
+    // Дата создания (UTC)
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 }

@@ -1,17 +1,22 @@
-﻿namespace ProductionSystem.Models;
+using System.ComponentModel.DataAnnotations;
 
-// Модель материала — описывает сырьё которое используется для производства
+namespace ProductionSystem.Models;
+
+// Материал — сырьё на складе, из которого делают изделия
 public class Material
 {
-    // Уникальный номер материала (база данных заполняет сама)
     public int Id { get; set; }
 
     // Название материала, например "Сталь листовая"
+    [Required(ErrorMessage = "Название обязательно")]
+    [MinLength(2, ErrorMessage = "Название слишком короткое")]
     public string Name { get; set; } = string.Empty;
 
-    // Единица измерения, например "кг", "м", "шт"
+    // Единица измерения: "кг", "м", "шт"
+    [Required(ErrorMessage = "Единица измерения обязательна")]
     public string Unit { get; set; } = string.Empty;
 
-    // Количество материала на складе
+    // Остаток на складе
+    [Range(0, double.MaxValue, ErrorMessage = "Количество не может быть отрицательным")]
     public double Quantity { get; set; }
 }
